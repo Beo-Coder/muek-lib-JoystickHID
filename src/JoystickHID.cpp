@@ -9,17 +9,19 @@
 
 using namespace arduino;
 
-JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount) {
-    if(axisCount > MAX_AXIS_COUNT){
+JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount, bool autoSend) {
+    this->autoSend = autoSend;
+
+    if (axisCount > MAX_AXIS_COUNT) {
         this->axisCount = MAX_AXIS_COUNT;
-    }else{
+    } else {
         this->axisCount = axisCount;
     }
 
 
 
     //Declare array for axis
-    if(this->axisCount > 0){
+    if (this->axisCount > 0) {
         axisState = new int32_t[this->axisCount];
         axisMinimum = new int32_t[this->axisCount];
         axisMaximum = new int32_t[this->axisCount];
@@ -27,18 +29,18 @@ JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount) {
 
 
         //Init values for axes
-        for(int i=0; i<this->axisCount; i++){
+        for (int i = 0; i < this->axisCount; i++) {
             axisState[i] = 0;
             axisMinimum[i] = -1028;
             axisMaximum[i] = 1028;
         }
     }
 
-    if(buttonCount > MAX_BUTTON_COUNT){
+    if (buttonCount > MAX_BUTTON_COUNT) {
         this->buttonCount = MAX_BUTTON_COUNT;
-    }else if (buttonCount < 1) {
+    } else if (buttonCount < 1) {
         this->buttonCount = 1;
-    }else{
+    } else {
         this->buttonCount = buttonCount;
     }
 
@@ -52,23 +54,23 @@ JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount) {
         buttonValues = new uint8_t[buttonValuesArraySize];
 
         //Init values for buttons
-        for(int i=0; i<this->buttonCount; i++){
+        for (int i = 0; i < this->buttonCount; i++) {
             buttonValues[i] = 0;
 
         }
     }
 
-
+    sendState();
 
 
 }
-
 
 
 void JoystickHID::setAxis(uint8_t axisIndex, int32_t value) {
     if (axisIndex < axisCount) {
         axisState[axisIndex] = value;
     }
+    if (autoSend) sendState();
 
 }
 
@@ -88,6 +90,7 @@ void JoystickHID::pressButton(uint8_t buttonIndex) {
     int bit = buttonIndex % 8;
 
     bitSet(buttonValues[index], bit);
+    if (autoSend) sendState();
 
 }
 
@@ -98,6 +101,7 @@ void JoystickHID::releaseButton(uint8_t buttonIndex) {
     int bit = buttonIndex % 8;
 
     bitClear(buttonValues[index], bit);
+    if (autoSend) sendState();
 
 }
 
@@ -146,8 +150,8 @@ bool JoystickHID::sendState() {
     uint8_t index = 1;
 
     // Load Button State
-    for (; index < buttonValuesArraySize+1; index++) {
-        report.data[index] = buttonValues[index-1];
+    for (; index < buttonValuesArraySize + 1; index++) {
+        report.data[index] = buttonValues[index - 1];
     }
     // Set Axis Value
     for (int i = 0; i < axisCount; i++) {
@@ -173,8 +177,6 @@ const uint8_t *JoystickHID::report_desc() {
     if (buttonsInLastByte > 0) {
         buttonPaddingBits = 8 - buttonsInLastByte;
     }
-
-
 
 
     static uint8_t reportDescriptor[] = {
@@ -226,8 +228,6 @@ const uint8_t *JoystickHID::report_desc() {
     reportLength = sizeof(reportDescriptor);
     return reportDescriptor;
 }
-
-
 
 
 #define DEFAULT_CONFIGURATION (1)
