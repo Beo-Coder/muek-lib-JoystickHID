@@ -3,9 +3,10 @@
 #include <Arduino.h>
 #include "JoystickHID.h"
 
-JoystickHID joystick(6, 8, true);
+JoystickHID joystick(10, 6, true);
 
 void setup() {
+    Serial1.begin(9600);
 
 }
 
@@ -16,7 +17,7 @@ void loop() {
 
     for (int i = 0; i < 1028; i++) {
         joystick.setAxis(0, i);
-        joystick.setAxis(1, -i);
+        //joystick.setAxis(1, -i);
     }
 
     delay(100);

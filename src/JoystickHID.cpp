@@ -14,6 +14,10 @@ JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount, bool autoSend) 
 
     if (axisCount > MAX_AXIS_COUNT) {
         this->axisCount = MAX_AXIS_COUNT;
+
+    } else if (axisCount < 1) {
+        this->axisCount = 1;
+
     } else {
         this->axisCount = axisCount;
     }
@@ -153,9 +157,12 @@ bool JoystickHID::sendState() {
     for (; index < buttonValuesArraySize + 1; index++) {
         report.data[index] = buttonValues[index - 1];
     }
+
     // Set Axis Value
-    for (int i = 0; i < axisCount; i++) {
-        index += buildAndSetAxisValue(axisState[i], axisMinimum[i], axisMaximum[i], &(report.data[index]));
+    if (axisCount > 0) {
+        for (int i = 0; i < axisCount; i++) {
+            index += buildAndSetAxisValue(axisState[i], axisMinimum[i], axisMaximum[i], &(report.data[index]));
+        }
     }
 
 
@@ -179,54 +186,212 @@ const uint8_t *JoystickHID::report_desc() {
     }
 
 
-    static uint8_t reportDescriptor[] = {
-            0x05, 0x01, // USAGE_PAGE (Generic Desktop)
-            0x09, DEFAULT_DEVICE_ID, // USAGE (Joystick)
-            0xa1, 0x01, // COLLECTION (Application)
-            0x85, DEFAULT_REPORT_ID, //   REPORT_ID (3)
+    static uint8_t reportDescriptor2[100];
+    uint8_t index = 0;
 
-            0x05, 0x09, // USAGE_PAGE (Button)
-            0x19, 0x01, // USAGE_MINIMUM (Button 1)
-            0x29, 0x80, // USAGE_MAXIMUM (Button 128)
-            0x15, 0x00, // LOGICAL_MINIMUM (0)
-            0x25, 0x01, // LOGICAL_MAXIMUM (1)
-            0x95, 0x80, // REPORT_COUNT (128)
-            0x75, 0x01, // REPORT_SIZE (1)
-            0x81, 0x02, // INPUT (Data,Var,Abs)
+    // USAGE_PAGE (Generic Desktop)
+    reportDescriptor2[index++] = 0x05;
+    reportDescriptor2[index++] = 0x01;
+
+    // USAGE (Joystick)
+    reportDescriptor2[index++] = 0x09;
+    reportDescriptor2[index++] = DEFAULT_DEVICE_ID;
+
+    // COLLECTION (Application)
+    reportDescriptor2[index++] = 0xa1;
+    reportDescriptor2[index++] = 0x01;
+
+    // REPORT_ID (3)
+    reportDescriptor2[index++] = 0x85;
+    reportDescriptor2[index++] = DEFAULT_REPORT_ID;
+
+    if (buttonCount > 0) {
+        // USAGE_PAGE (Button)
+        reportDescriptor2[index++] = 0x05;
+        reportDescriptor2[index++] = 0x09;
+
+        // USAGE_MINIMUM (Button 1)
+        reportDescriptor2[index++] = 0x19;
+        reportDescriptor2[index++] = 0x01;
+
+        // USAGE_MAXIMUM (Button 128)
+        reportDescriptor2[index++] = 0x29;
+        reportDescriptor2[index++] = buttonCount;
+
+        // LOGICAL_MINIMUM (0)
+        reportDescriptor2[index++] = 0x15;
+        reportDescriptor2[index++] = 0x00;
+
+        // LOGICAL_MAXIMUM (1)
+        reportDescriptor2[index++] = 0x25;
+        reportDescriptor2[index++] = 0x01;
+
+        // REPORT_COUNT (128)
+        reportDescriptor2[index++] = 0x95;
+        reportDescriptor2[index++] = buttonCount;
+
+        // REPORT_SIZE (1)
+        reportDescriptor2[index++] = 0x75;
+        reportDescriptor2[index++] = 0x01;
+
+        // INPUT (Data,Var,Abs)
+        reportDescriptor2[index++] = 0x81;
+        reportDescriptor2[index++] = 0x02;
+
+        if (buttonPaddingBits > 0) {
+            // REPORT_SIZE (1)
+            reportDescriptor2[index++] = 0x75;
+            reportDescriptor2[index++] = 0x01;
+
+            // REPORT_COUNT (# of padding bits)
+            reportDescriptor2[index++] = 0x95;
+            reportDescriptor2[index++] = buttonPaddingBits;
+
+            // INPUT (Const,Var,Abs)
+            reportDescriptor2[index++] = 0x81;
+            reportDescriptor2[index++] = 0x03;
+        }
+
+    }
 
 
-            0x75, 0x01, // REPORT_SIZE (1)
-            0x95, 0x00, // REPORT_COUNT (# of padding bits)
-            0x81, 0x03, // INPUT (Const,Var,Abs)
+    if (axisCount > 0) {
+        // USAGE_PAGE (Generic Desktop) // analog axes
+        reportDescriptor2[index++] = 0x05;
+        reportDescriptor2[index++] = 0x01;
+
+        if (axisCount > 0) {
+            // USAGE (X)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x30;
+        }
+
+        if (axisCount > 1) {
+            // USAGE (Y)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x31;
+        }
+
+        if (axisCount > 2) {
+            // USAGE (Z)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x32;
+        }
+
+        if (axisCount > 3) {
+            // USAGE (Rx)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x33;
+        }
+
+        if (axisCount > 4) {
+            // USAGE (Ry)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x34;
+        }
+
+        if (axisCount > 5) {
+            // USAGE (Rz)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x35;
+        }
+
+        //LOGICAL_MINIMUM (0)
+        reportDescriptor2[index++] = 0x15;
+        reportDescriptor2[index++] = 0x00;
+
+        //LOGICAL_MAXIMUM (65535)
+        reportDescriptor2[index++] = 0x27;
+        reportDescriptor2[index++] = 0xFF;
+        reportDescriptor2[index++] = 0xFF;
+        reportDescriptor2[index++] = 0x00;
+        reportDescriptor2[index++] = 0x00;
+
+        // REPORT_SIZE (16)
+        reportDescriptor2[index++] = 0x75;
+        reportDescriptor2[index++] = 0x10;
+
+        if(axisCount > 6){
+            // REPORT_COUNT (6)
+            reportDescriptor2[index++] = 0x95;
+            reportDescriptor2[index++] = 0x06;
+        }else{
+            // REPORT_COUNT (6)
+            reportDescriptor2[index++] = 0x95;
+            reportDescriptor2[index++] = axisCount;
+        }
+
+
+        // INPUT (Data, Variable, Absolute)
+        reportDescriptor2[index++] = 0x81;
+        reportDescriptor2[index++] = 0x02;
+    }
+
+    if(axisCount > 6){
+        // USAGE_PAGE (Simulation Controls)
+        reportDescriptor2[index++] = 0x05;
+        reportDescriptor2[index++] = 0x02;
+
+
+        if (axisCount-6 > 0) {
+            // USAGE (Slider)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x36;
+        }
+
+        if (axisCount-6 > 1) {
+            // USAGE (Dial)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x37;
+        }
+
+        if (axisCount-6 > 2) {
+            // USAGE (Wheel)
+            reportDescriptor2[index++] = 0x09;
+            reportDescriptor2[index++] = 0x38;
+        }
+
+        //LOGICAL_MINIMUM (0)
+        reportDescriptor2[index++] = 0x15;
+        reportDescriptor2[index++] = 0x00;
+
+        //LOGICAL_MAXIMUM (65535)
+        reportDescriptor2[index++] = 0x27;
+        reportDescriptor2[index++] = 0xFF;
+        reportDescriptor2[index++] = 0xFF;
+        reportDescriptor2[index++] = 0x00;
+        reportDescriptor2[index++] = 0x00;
+
+        // REPORT_SIZE (16)
+        reportDescriptor2[index++] = 0x75;
+        reportDescriptor2[index++] = 0x10;
+
+        // REPORT_COUNT (simulationCount)
+        reportDescriptor2[index++] = 0x95;
+        reportDescriptor2[index++] = axisCount-6;
+
+
+        // INPUT (Data,Var,Abs)
+        reportDescriptor2[index++] = 0x81;
+        reportDescriptor2[index++] = 0x02;
 
 
 
-            0x05, 0x01, // USAGE_PAGE (Generic Desktop) // analog axes
-            0x09, 0x30, // USAGE (X)
-            0x09, 0x31, // USAGE (Y)
-            0x09, 0x32, // USAGE (Z)
-            0x09, 0x33, // USAGE (Rx)
-            0x09, 0x34, // USAGE (Ry)
-            0x09, 0x35, // USAGE (Rz)
-            0x15, 0x00, //LOGICAL_MINIMUM (0)
-            0x27, 0xFF, 0xFF, 0x00, 0x00, //LOGICAL_MAXIMUM (65535)
-            0x75, 0x10, // REPORT_SIZE (16)
-            0x95, 0x06, // REPORT_COUNT (6)
-            0x81, 0x02, // INPUT (Data, Variable, Absolute)
-
-            0xc0 // END_COLLECTION
-
-    };
-
-    //I know this is scuffed
-    reportDescriptor[13] = buttonCount;
-    reportDescriptor[19] = buttonCount;
-    reportDescriptor[27] = buttonPaddingBits;
-    reportDescriptor[54] = axisCount;
+    } // Simulation Controls
 
 
-    reportLength = sizeof(reportDescriptor);
-    return reportDescriptor;
+
+
+    // END_COLLECTION
+    reportDescriptor2[index++] = 0xc0;
+
+
+
+
+
+
+    reportLength = index;
+    return reportDescriptor2;
 }
 
 

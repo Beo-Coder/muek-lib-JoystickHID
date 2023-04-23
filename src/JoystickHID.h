@@ -5,7 +5,7 @@
 #ifndef JOYSTICKHID_H
 #define JOYSTICKHID_H
 
-#define MAX_AXIS_COUNT 6
+#define MAX_AXIS_COUNT 9
 #define MAX_BUTTON_COUNT 128
 
 #define DEFAULT_REPORT_ID 0x03
