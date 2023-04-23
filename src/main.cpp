@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "JoystickHID.h"
 
-JoystickHID joystick(10, 6, true);
+JoystickHID joystick(9, 6, true);
 
 void setup() {
     Serial1.begin(9600);
