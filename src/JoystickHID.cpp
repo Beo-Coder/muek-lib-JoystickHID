@@ -12,8 +12,8 @@ using namespace arduino;
 JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount, bool autoSend) {
     this->autoSend = autoSend;
 
-    if (axisCount > MAX_AXIS_COUNT) {
-        this->axisCount = MAX_AXIS_COUNT;
+    if (axisCount > HID_MAX_AXIS_COUNT) {
+        this->axisCount = HID_MAX_AXIS_COUNT;
 
     } else if (axisCount < 1) {
         this->axisCount = 1;
@@ -40,8 +40,8 @@ JoystickHID::JoystickHID(uint8_t axisCount, uint8_t buttonCount, bool autoSend) 
         }
     }
 
-    if (buttonCount > MAX_BUTTON_COUNT) {
-        this->buttonCount = MAX_BUTTON_COUNT;
+    if (buttonCount > HID_MAX_BUTTON_COUNT) {
+        this->buttonCount = HID_MAX_BUTTON_COUNT;
     } else if (buttonCount < 1) {
         this->buttonCount = 1;
     } else {
